@@ -1,0 +1,3 @@
+[submodule "app-under-test"]
+	path = app-under-test
+	url = https://github.com/daniel-mailhiot/note-taking-app.git
