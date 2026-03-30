@@ -13,10 +13,10 @@
 ## Summary
 | Metric | Count |
 |---|---|
-| Total Executed | 10 |
-| Passed | 10 |
-| Failed | 0 |
-| Not Run | 5 |
+| Total Executed | 13 |
+| Passed | 12 |
+| Failed | 1 |
+| Not Run | 2 |
 
 ## Results by Test Case
 | ID | Title | Result | Notes |
@@ -31,9 +31,9 @@
 | TC-008 | Create note succeeds for authenticated user | PASS | |
 | TC-009 | Edit note succeeds for owner | PASS | After updating, the URL bar shows /notes/<id>?_method=PUT instead of /notes. The edit form (edit.ejs line 19) submits a POST to /notes/<id>?_method=PUT. The method-override middleware (app.js line 21) converts this to a PUT request. After a successful update, the updateNote controller (noteController.js line 66) calls listNotes(req, res) which re-renders the notes list instead of redirecting. Because no redirect occurs, the browser still displays the original form submission URL. |
 | TC-010 | Delete note succeeds for owner | PASS | After deleting, the URL bar correctly shows /notes because deleteNote (noteController.js line 88) uses res.redirect('/notes'). This is inconsistent with updateNote (noteController.js line 66) which calls listNotes() instead of redirecting (see TC-009 note). |
-| TC-011 | Ownership enforcement blocks cross-user edit and delete | NOT RUN | |
-| TC-012 | Validation rejects whitespace-only note fields | NOT RUN | |
-| TC-013 | Boundary length accepted for note title and content | NOT RUN | |
+| TC-011 | Ownership enforcement blocks cross-user edit and delete | PASS | Ownership enforcement works as expected. The "Note not found" message (noteController.js lines 111 and 132) is rendered as unstyled plain text via res.send() rather than an EJS template, so the page has no app layout, navigation, or styling. User has no way to navigate back except using the browser back button. |
+| TC-012 | Validation rejects whitespace-only note fields | FAIL | FAIL: Whitespace-only input was rejected, but the error message is "Failed to create note" (generic 500 from catch block, noteController.js line 41) instead of a clear validation message. The controller check if (!title \|\| !content) (noteController.js line 26) does not trim input first, so "   " passes as truthy in JavaScript. The input reaches Note.create() (noteController.js line 31) where Mongoose applies trim: true (Note.js lines 7, 13) stripping it to "", then required: true (Note.js lines 8, 14) rejects the empty string and throws a ValidationError. The catch block handles this generically instead of returning the controller's own "Title and content are required" message (noteController.js line 27). |
+| TC-013 | Boundary length accepted for note title and content | PASS | |
 | TC-014 | Duplicate note on browser refresh after create | NOT RUN | |
 | TC-015 | Invalid note ID behavior for malformed and nonexistent IDs | NOT RUN | |
 
@@ -49,3 +49,5 @@ Screenshots are stored in `evidence/TR-001/manual/`.
 - Error messages from previous failed actions persist on the page if a subsequent form submission is blocked by browser validation before reaching the server. 
 Discovered during transition between TC-002 and TC-003, the browser's built-in validation caught the short password and blocked the form from submitting (the tooltip under password bar is from the browser, not from the app).
 But because the form never submitted, the app never had a chance to clear or replace the old error message, so the "Username already taken" message stayed on screen even though it no longer applied.
+
+- All error responses in noteController.js use res.status().send() (plain text) instead of rendering an EJS template with the app layout. This means any error page (400, 404, 500) loses the header, navigation, styling, and logout button. The user has no way to return to the app except using the browser back button. Observed in TC-011 (ownership 404) and TC-012 (validation 500). This affects all 10 error responses in noteController.js (lines 27, 41, 62, 69, 85, 91, 111, 117, 132, 141).
