@@ -4,7 +4,7 @@
 | Field | Value |
 |---|---|
 | Run ID | TR-001 |
-| Date | 2026-03-27 to [update when done] |
+| Date | 2026-03-27 to 2026-03-30 |
 | Tester | Daniel |
 | App Commit | 7835fe78d15db06049db58964f5ee29f51859e12 |
 | Environment | Windows 11, Chrome 146.0.7680.165, Node 24.13.1, MongoDB 8.2.5 (mongosh 2.7.0) |
@@ -13,10 +13,10 @@
 ## Summary
 | Metric | Count |
 |---|---|
-| Total Executed | 13 |
-| Passed | 12 |
-| Failed | 1 |
-| Not Run | 2 |
+| Total Executed | 15 |
+| Passed | 13 |
+| Failed | 2 |
+| Not Run | 0 |
 
 ## Results by Test Case
 | ID | Title | Result | Notes |
@@ -34,8 +34,8 @@
 | TC-011 | Ownership enforcement blocks cross-user edit and delete | PASS | Ownership enforcement works as expected. The "Note not found" message (noteController.js lines 111 and 132) is rendered as unstyled plain text via res.send() rather than an EJS template, so the page has no app layout, navigation, or styling. User has no way to navigate back except using the browser back button. |
 | TC-012 | Validation rejects whitespace-only note fields | FAIL | FAIL: Whitespace-only input was rejected, but the error message is "Failed to create note" (generic 500 from catch block, noteController.js line 41) instead of a clear validation message. The controller check if (!title \|\| !content) (noteController.js line 26) does not trim input first, so "   " passes as truthy in JavaScript. The input reaches Note.create() (noteController.js line 31) where Mongoose applies trim: true (Note.js lines 7, 13) stripping it to "", then required: true (Note.js lines 8, 14) rejects the empty string and throws a ValidationError. The catch block handles this generically instead of returning the controller's own "Title and content are required" message (noteController.js line 27). |
 | TC-013 | Boundary length accepted for note title and content | PASS | |
-| TC-014 | Duplicate note on browser refresh after create | NOT RUN | |
-| TC-015 | Invalid note ID behavior for malformed and nonexistent IDs | NOT RUN | |
+| TC-014 | Duplicate note on browser refresh after create | FAIL | FAIL: Refreshing after note creation causes the note to duplicate. createNewNote (noteController.js line 38) calls listNotes(req, res) instead of res.redirect('/notes'), so the browser's last request remains the POST and refreshing resubmits it. This is the same issue as updateNote (see TC-009). deleteNote (noteController.js line 88) does not have this problem because it uses res.redirect('/notes'). |
+| TC-015 | Invalid note ID behavior for malformed and nonexistent IDs | PASS | |
 
 ## Defects Found
 | Bug ID | Summary | Severity | Linked Test Cases |
