@@ -45,7 +45,6 @@ The following areas are intentionally excluded:
 
 
 ## Risk Matrix
-
 | ID | Risk Area | Likelihood | Impact | Priority | Mitigation |
 |----|-----------|-----------|--------|----------|------------|
 | R1 | Authentication bypass - unauthenticated user accesses protected routes | Low | Critical | High | Test `requireAuth` middleware and verify redirect for all `/notes` routes |
@@ -57,6 +56,24 @@ The following areas are intentionally excluded:
 | R7 | Logout does not fully invalidate session - stale session allows access | Low | High | Medium | After logout, attempt direct navigation to `/notes` |
 | R8 | Invalid note ID causes unhandled server error | Medium | Low | Low | Submit malformed IDs to edit/delete endpoints and document behavior |
 
+## Severity and Priority Definitions
+Severity describes the impact of a defect on the user or the data. Priority describes when the defect should be fixed relative to other work. Every bug report in `docs/bugs/` uses these definitions.
+
+### Severity
+| Level | Definition |
+|---|---|
+| Critical | Blocks core use. Data loss, data corruption, broken authentication, broken ownership enforcement, or app crashes. No reasonable workaround. |
+| Major | Core flow works incorrectly or produces unexpected state a typical user will notice (for example, silent data duplication). Workaround may exist but is not obvious. |
+| Minor | Secondary flow, confusing message, or UX defect. Data is correct and the user can complete the task, but the experience is degraded. |
+| Trivial | Cosmetic only. Typo, alignment, console warning. No functional impact. |
+
+### Priority
+| Level | Definition |
+|---|---|
+| P1 | Fix before the next release. Blocks shipping. |
+| P2 | Fix in the current cycle. Schedule alongside other in-progress work. |
+| P3 | Fix in a near-term cycle. |
+| P4 | Backlog. Fix when touching related code or when time permits. |
 
 ## Test Approach
 
