@@ -23,20 +23,20 @@
 5. Click the Save Note button.
 6. After the notes list appears and shows the new note, press F5 or click the browser refresh button.
 7. If the browser shows a 'Confirm Form Resubmission' dialog, click to confirm.
-8. Count how many copies of 'Refresh Test Note' appear in the list.
+8. See two copies of 'Refresh Test Note' in the list.
 
 ## Expected Result
-Only one copy of 'Refresh Test Note' appears in the list. Refreshing a list view should be safe and idempotent.
+Only one copy of 'Refresh Test Note' should appear in the list.
 
 ## Actual Result
 Two copies of 'Refresh Test Note' appear in the list. Each subsequent refresh creates another duplicate.
 
 ## Observed Root Cause
-In `app-under-test/controllers/noteController.js` around line 38, `createNewNote` calls `listNotes(req, res)` instead of `res.redirect('/notes')`. Because no redirect is issued, the browser's last request remains the POST to `/notes`, so refresh resubmits the create. The Post/Redirect/Get pattern is not followed. `updateNote` at line 66 has the same issue and produces the related TC-009 symptom where the URL retains `?_method=PUT` after updating. Refreshing after an update re-submits the same PUT, which is idempotent and leaves the note unchanged, so the update path shows the URL-persistence symptom but not duplication. Create is the only endpoint where the missing redirect produces new rows. `deleteNote` at line 88 correctly uses `res.redirect('/notes')` and does not exhibit the defect.
+In `app-under-test/controllers/noteController.js` at line 38, `createNewNote` calls `listNotes(req, res)` instead of `res.redirect('/notes')`, so the browser's last request remains the POST and refreshing resubmits it. This is the same issue as `updateNote` (see TC-009). `deleteNote` at line 88 does not have this problem because it uses `res.redirect('/notes')`.
 
 ## Scope and Related Observations
-- Same root cause likely affects edit submissions (see TC-009 notes in docs/test-run-01.md).
-- No data loss, but the notes list can accumulate silent duplicates if users refresh habitually.
+- Same root cause affects edit submissions (see TC-009 notes in docs/test-run-01.md).
+- No data loss, but the notes list can accumulate duplicates if the user refreshes habitually.
 
 ## Evidence
 - Failing test case: TC-014 (docs/test-cases.csv)
@@ -45,4 +45,4 @@ In `app-under-test/controllers/noteController.js` around line 38, `createNewNote
 - Screenshot: evidence/TR-001/manual/TC-014-duplicate-on-refresh-FAIL.png
 
 ## Suggested Fix
-Replace `return listNotes(req, res)` with `return res.redirect('/notes')` at [noteController.js line 38](app-under-test/controllers/noteController.js#L38) (`createNewNote`) and [line 66](app-under-test/controllers/noteController.js#L66) (`updateNote`), matching the working pattern in `deleteNote` at [line 88](app-under-test/controllers/noteController.js#L88). The redirect triggers a fresh `GET /notes` that re-runs `listNotes`, so the user still lands on the updated list.
+Replace `return listNotes(req, res)` with `return res.redirect('/notes')` at [noteController.js line 38](app-under-test/controllers/noteController.js#L38) (`createNewNote`) and [line 66](app-under-test/controllers/noteController.js#L66) (`updateNote`), matching `deleteNote` [line 88](app-under-test/controllers/noteController.js#L88). The redirect triggers a fresh `GET /notes` that re-runs `listNotes`, so the user still lands on the updated list.
