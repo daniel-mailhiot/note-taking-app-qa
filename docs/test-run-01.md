@@ -23,7 +23,7 @@
 |---|---|---|---|
 | TC-001 | Registration success with unique username | PASS | |
 | TC-002 | Registration failure for duplicate username | PASS | |
-| TC-003 | Registration failure for short password | PASS | Password length is caught by browser validation (register.ejs line 51) before the form submits, so the request never reaches server-side controller validation (authController.js) or database schema validation (User.js). The browser displays its own tooltip instead of the server's 'Password must be at least 6 characters' message (authController.js line 39). Original expected result assumed a server-side message. |
+| TC-003 | Registration failure for short password | PASS | Password length is caught by browser validation (register.ejs line 51) before the form submits, so the request never reaches server-side controller validation (authController.js) or database schema validation (User.js). The browser displays its own tooltip instead of the server's 'Password must be at least 6 characters' message (authController.js line 39). Original expected result assumed a server-side message. Marked PASS because the intent of the test (confirm short passwords cannot register and the user sees why) is satisfied, and the only difference from the expected_result is which part of the app shows the message, not how the app behaves. |
 | TC-004 | Login success with valid credentials | PASS | |
 | TC-005 | Login failure with invalid credentials | PASS | |
 | TC-006 | Logout invalidates session and blocks protected pages | PASS | |
@@ -38,9 +38,12 @@
 | TC-015 | Invalid note ID behavior for malformed and nonexistent IDs | PASS | |
 
 ## Defects Found
-| Bug ID | Summary | Severity | Linked Test Cases |
-|---|---|---|---|
-| (none yet) | | | |
+| Bug ID | Summary | Severity | Failed in | Also observed in |
+|---|---|---|---|---|
+| [BUG-001](bugs/BUG-001-duplicate-on-refresh.md) | Refreshing after note creation duplicates the note because `createNewNote` re-renders the list instead of redirecting (Post/Redirect/Get not followed). Same missing-redirect pattern in `updateNote` produces the TC-009 URL-persistence symptom. | Major | TC-014 | TC-009 |
+| [BUG-002](bugs/BUG-002-whitespace-validation-500.md) | Whitespace-only title and content fall through the controller's truthy check and are rejected later by Mongoose, surfacing as a generic "Failed to create note" 500 instead of a clear validation message. | Minor | TC-012 | (none) |
+| [BUG-003](bugs/BUG-003-error-responses-plain-text.md) | All 12 error responses in `noteController.js` use `res.send()` plain text, so error pages drop the app layout, header, navigation, and logout button. Users can only return via the browser back button. | Minor | (none) | TC-011, TC-012 |
+| [BUG-004](bugs/BUG-004-stale-error-after-blocked-submit.md) | Server-rendered error messages on /auth/register remain visible when the next submission is blocked by HTML5 validation before reaching the server, so a stale "Username already taken" can persist against a now-unique username. Same pattern exists on /auth/login. | Minor | (none) | TC-002, TC-003 |
 
 ## Evidence
 Screenshots are stored in `evidence/TR-001/manual/`.
@@ -50,4 +53,4 @@ Screenshots are stored in `evidence/TR-001/manual/`.
 Discovered during transition between TC-002 and TC-003, the browser's built-in validation caught the short password and blocked the form from submitting (the tooltip under password bar is from the browser, not from the app).
 But because the form never submitted, the app never had a chance to clear or replace the old error message, so the "Username already taken" message stayed on screen even though it no longer applied.
 
-- All error responses in noteController.js use res.status().send() (plain text) instead of rendering an EJS template with the app layout. This means any error page (400, 404, 500) loses the header, navigation, styling, and logout button. The user has no way to return to the app except using the browser back button. Observed in TC-011 (ownership 404) and TC-012 (validation 500). This affects all 10 error responses in noteController.js (lines 27, 41, 62, 69, 85, 91, 111, 117, 132, 141).
+- All error responses in noteController.js use res.status().send() (plain text) instead of rendering an EJS template with the app layout. This means any error page (400, 404, 500) loses the header, navigation, styling, and logout button. The user has no way to return to the app except using the browser back button. Observed in TC-011 (ownership 404) and TC-012 (validation 500). This affects all 12 error responses in noteController.js (lines 15, 27, 41, 52, 62, 69, 85, 91, 111, 117, 132, 141).
