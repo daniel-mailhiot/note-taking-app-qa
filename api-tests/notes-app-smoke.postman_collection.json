@@ -1,0 +1,602 @@
+{
+  "info": {
+    "_postman_id": "44993bed-b86e-40d4-9ba1-a8493f406a2f",
+    "name": "Notes App API Smoke",
+    "description": "Smoke suite for note-taking-app. Covers auth (register, login), notes CRUD with session, and negative cases (unauth access, invalid input). Each request references a manual test case ID in test-cases.csv.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49626508"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST Register new user (TC-001)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Make the register request idempotent so the smoke suite is rerunnable.\r",
+                  "// Each run generates a fresh username by appending a short timestamp.\r",
+                  "const base = pm.environment.get(\"testUsername\") || \"qa_postman_user\";\r",
+                  "// Strip any prior suffix so they do not accumulate (_123_456_789).\r",
+                  "const clean = base.replace(/_\\d{6,}$/, \"\");\r",
+                  "const stamped = `${clean}_${Date.now()}`;\r",
+                  "pm.environment.set(\"testUsername\", stamped);\r",
+                  "console.log(\"Register will use username:\", stamped);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"TC-001 Status is 302 Found\", function () {\r",
+                  "    pm.response.to.have.status(302)\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-001 Location header redirects to /notes\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/notes\")\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-001 Set-Cookie contains connect.sid\", function () {\r",
+                  "    const setCookie = pm.response.headers.get(\"Set-Cookie\") || \"\"\r",
+                  "    pm.expect(setCookie).to.include(\"connect.sid\")\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{testUsername}}",
+                  "type": "text",
+                  "uuid": "da5ed9d6-31a7-4401-9a2a-9087c08b9650"
+                },
+                {
+                  "key": "password",
+                  "value": "{{testPassword}}",
+                  "type": "text",
+                  "uuid": "faf19611-a805-49de-99a4-2fa7682f9ef1"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/register",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Manual test case: TC-001\n\nRegisters a new user. Expected 302 redirect to /notes and Set-Cookie: connect.sid on success."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Logout (TC-006)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"TC-006 Status is 302 Found\", function () {\r",
+                  "    pm.response.to.have.status(302)\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-006 Location header redirects to /auth/login\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/auth/login\")\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-006 Set-Cookie clears connect.sid\", function () {\r",
+                  "    const setCookie = pm.response.headers.get(\"Set-Cookie\") || \"\"\r",
+                  "    pm.expect(setCookie).to.include(\"connect.sid=;\")\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/auth/logout",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Manual test case: TC-006 (logout redirect and session cookie clear portion).\n\nLogs the authenticated user out. Expected 302 redirect to /auth/login and a Set-Cookie that clears connect.sid on success. This request only asserts the logout response itself. TC-007 Unauth separately verifies that unauthenticated requests to /notes redirect to login."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login existing user (TC-004)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"TC-004 Status is 302 Found\", function () {\r",
+                  "    pm.response.to.have.status(302)\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-004 Location header redirects to /notes\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/notes\")\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-004 Set-Cookie contains connect.sid (new session)\", function () {\r",
+                  "    const setCookie = pm.response.headers.get(\"Set-Cookie\") || \"\"\r",
+                  "    pm.expect(setCookie).to.include(\"connect.sid\")\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{testUsername}}",
+                  "type": "text",
+                  "uuid": "54247a5e-381b-4855-b880-f5f9352c9d69"
+                },
+                {
+                  "key": "password",
+                  "value": "{{testPassword}}",
+                  "type": "text",
+                  "uuid": "cbe61842-ff96-4585-85f7-dffa4773d367"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/login",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Manual test case: TC-004\n\nLogs in the user created by POST Register new user. Expected 302 redirect to /notes and Set-Cookie: connect.sid (new session)."
+          },
+          "response": []
+        }
+      ],
+      "description": "User registration and login. Establishes the session cookie used by Notes requests."
+    },
+    {
+      "name": "Notes",
+      "item": [
+        {
+          "name": "POST Create note (TC-008)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate a fresh title and content for every Create run so reruns stay clean and each note is easy to identify in the DB or UI.\r",
+                  "const stamp = Date.now();\r",
+                  "pm.environment.set(\"testNoteTitle\", `QA Smoke Note ${stamp}`);\r",
+                  "pm.environment.set(\"testNoteContent\", `Created by Postman at ${new Date(stamp).toISOString()}`);\r",
+                  "console.log(\"Create will use title:\", pm.environment.get(\"testNoteTitle\"));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"TC-008 Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200)\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-008 Response HTML contains the newly created title\", function () {\r",
+                  "    const title = pm.environment.get(\"testNoteTitle\")\r",
+                  "    pm.expect(pm.response.text()).to.include(title)\r",
+                  "});\r",
+                  "\r",
+                  "// The app is EJS rendered, so POST /notes returns the full HTML notes list instead of a JSON object with an ID. Parse the first /notes/<id>/edit link out of the HTML, which is the newest note because listNotes sorts newest-first.\r",
+                  "pm.test(\"TC-008 New note ID is captured into environment\", function () {\r",
+                  "    const body = pm.response.text()\r",
+                  "    const match = body.match(/\\/notes\\/([a-f0-9]{24})\\/edit/)\r",
+                  "    pm.expect(match, \"expected at least one /notes/<id>/edit link in the HTML response\").to.not.be.null\r",
+                  "    pm.environment.set(\"noteId\", match[1])\r",
+                  "    console.log(\"Captured noteId:\", match[1])\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "title",
+                  "value": "{{testNoteTitle}}",
+                  "type": "text",
+                  "uuid": "9a2198fe-5c59-4bb3-95aa-a55bba0902fb"
+                },
+                {
+                  "key": "content",
+                  "value": "{{testNoteContent}}",
+                  "type": "text",
+                  "uuid": "65451ab4-19be-46f0-aa2e-9ad6aba94da9"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseURL}}/notes",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "notes"
+              ]
+            },
+            "description": "Manual test case: TC-008\n\nCreates a new note for the logged in user. Expected 200 OK with the new title rendered in the returned notes list HTML on success. Post-response script captures the new note's ID into {{noteId}} so the Update and Delete requests can reference it."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update own note (TC-009)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"TC-009 Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200)\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-009 Response HTML contains the updated title\", function () {\r",
+                  "    const updatedTitle = pm.environment.get(\"testNoteTitle\") + \" (updated)\"\r",
+                  "    pm.expect(pm.response.text()).to.include(updatedTitle)\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "title",
+                  "value": "{{testNoteTitle}} (updated)",
+                  "type": "text",
+                  "uuid": "b4f3b909-a10d-4cbb-97fa-3f5acf11b613"
+                },
+                {
+                  "key": "content",
+                  "value": "{{testNoteContent}} [edited by PUT]",
+                  "type": "text",
+                  "uuid": "16430a39-5614-4d65-8730-e3fae6fe7b87"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseURL}}/notes/{{noteId}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "notes",
+                "{{noteId}}"
+              ]
+            },
+            "description": "Manual test case: TC-009\n\nUpdates the note created by POST Create note. Expected 200 OK with the updated title rendered in the returned notes list HTML on success."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE own note (TC-010)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"TC-010 Status is 302 Found\", function () {\r",
+                  "    pm.response.to.have.status(302)\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-010 Location header redirects to /notes\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/notes\")\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/notes/{{noteId}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "notes",
+                "{{noteId}}"
+              ]
+            },
+            "description": "Manual test case: TC-010\n\nDeletes the note created by POST Create note. Expected 302 redirect to /notes on success."
+          },
+          "response": []
+        }
+      ],
+      "description": "Authenticated CRUD operations on notes: create, update own, delete own. Uses session cookie from Auth folder."
+    },
+    {
+      "name": "Negative",
+      "item": [
+        {
+          "name": "POST /notes with whitespace-only fields (TC-012, BUG-002)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Pinned to current buggy behavior by design so Newman stays green. When BUG-002 is fixed this test will go red, which is the signal to flip the assertions to the expected 400 with a validation message. Full context: docs/bugs/BUG-002-whitespace-validation-500.md\r",
+                  "pm.test(\"TC-012 (BUG-002) Whitespace fields currently return 500 (known bug)\", function () {\r",
+                  "    pm.response.to.have.status(500)\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-012 (BUG-002) Response body indicates a server error rather than a validation error\", function () {\r",
+                  "    pm.expect(pm.response.text()).to.include(\"Failed to create note\")\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "title",
+                  "value": " ",
+                  "type": "text",
+                  "uuid": "10582c3c-f7d1-4689-83ed-3fe7cd4cb40e"
+                },
+                {
+                  "key": "content",
+                  "value": " ",
+                  "type": "text",
+                  "uuid": "ecfd238a-9a2a-4d04-99a5-802192d7a098"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseURL}}/notes",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "notes"
+              ]
+            },
+            "description": "Manual test case: TC-012 (validation rejects whitespace-only note fields)  \nRelated defect: BUG-002\n\nSends a single space in both title and content. Runs first in the Negative folder so it inherits the live session from Notes CRUD, which the middleware requires before the controller's whitespace handling runs.\n\nCurrent behavior: 500 with a generic error (BUG-002 open).  \nExpected when fixed: 400 with a clear validation message.\n\nFull details: docs/bugs/BUG-002-whitespace-validation-500.md"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login with invalid credentials (TC-005)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"TC-005 Status is 401 Unauthorized\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-005 Response body shows 'Invalid username or password'\", function () {\r",
+                  "    pm.expect(pm.response.text()).to.include(\"Invalid username or password\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-005 No new session cookie is issued on failed login\", function () {\r",
+                  "    const setCookie = pm.response.headers.get(\"Set-Cookie\") || \"\";\r",
+                  "    pm.expect(setCookie).to.not.include(\"connect.sid\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Strip any session cookie before sending so the invalid login request runs as an unauthenticated user even if Login ran earlier.\r",
+                  "const jar = pm.cookies.jar();\r",
+                  "jar.clear(pm.environment.get(\"baseURL\"), function (err) {\r",
+                  "    if (err) {\r",
+                  "        console.log(\"Cookie clear error:\", err);\r",
+                  "    } else {\r",
+                  "        console.log(\"Cleared cookies before sending invalid login request.\");\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{testUsername}}",
+                  "type": "text",
+                  "uuid": "54247a5e-381b-4855-b880-f5f9352c9d69"
+                },
+                {
+                  "key": "password",
+                  "value": "wrongpassword",
+                  "type": "text",
+                  "uuid": "cbe61842-ff96-4585-85f7-dffa4773d367"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/login",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Manual test case: TC-005 (login with wrong password returns 401 and no session cookie)\n\nSends a valid existing username (created by POST Register new user in the same run) with a deliberately wrong password.\n\nExpected behavior: 401 Unauthorized with login page re-rendered containing \"Invalid username or password\" and no new connect.sid cookie.  \nCurrent behavior: matches expected (TC-005 passed in TR-001)."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /notes without session (TC-007)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Strip session cookie before sending so the request hits the app as an unauthenticated user even if Login ran earlier.\r",
+                  "const jar = pm.cookies.jar();\r",
+                  "jar.clear(pm.environment.get(\"baseURL\"), function (err) {\r",
+                  "    if (err) {\r",
+                  "        console.log(\"Cookie clear error:\", err);\r",
+                  "    } else {\r",
+                  "        console.log(\"Cleared cookies before sending unauth request.\");\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"TC-007 Status is 302 Found\", function () {\r",
+                  "    pm.response.to.have.status(302)\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"TC-007 Location header redirects to /auth/login\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/auth/login\")\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/notes",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "notes"
+              ]
+            },
+            "description": "Manual test case: TC-007 (unauthenticated access to /notes redirects to login)\n\nPre-request script clears the session cookie to simulate a logged out user.\n\nExpected behavior: 302 Found with Location: /auth/login.  \nCurrent behavior: matches expected (TC-007 passed in TR-001)."
+          },
+          "response": []
+        }
+      ],
+      "description": "Negative cases: unauthorized access to /notes and invalid input rejection."
+    }
+  ]
+}
