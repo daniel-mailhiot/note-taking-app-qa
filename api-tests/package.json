@@ -1,0 +1,12 @@
+{
+  "name": "notes-app-api-tests",
+  "version": "1.0.0",
+  "description": "Newman runner for the Notes App API smoke collection.",
+  "private": true,
+  "scripts": {
+    "smoke": "newman run notes-app-smoke.postman_collection.json -e notes-app-smoke.postman_environment.json"
+  },
+  "devDependencies": {
+    "newman": "^6.2.2"
+  }
+}
