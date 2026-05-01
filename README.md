@@ -19,36 +19,26 @@ The planned toolset for this QA project includes Postman and Newman for API test
 - Submodule path: `app-under-test`
 - Pinned commit: `7835fe78d15db06049db58964f5ee29f51859e12`
 
-## Getting Started (Local Setup)
+## Getting Started
+
 ### 1) Prerequisites
 - Git
 - Node.js
 - MongoDB
 
-### 2) Clone the QA Repo with submodules
+### 2) Clone the QA Repo with Submodules
 Use `--recurse-submodules` so Git clones both this QA repo and the `app-under-test` submodule in one step.
 
 ```bash
 git clone --recurse-submodules https://github.com/daniel-mailhiot/note-taking-app-qa
 ```
-Then:
-
 ```bash
 cd note-taking-app-qa
 ```
 
-### If You Already Cloned Without Submodules
-If the `app-under-test` folder is empty or missing files, run this from the QA repo root:
-
-```bash
-git submodule update --init --recursive
-```
-
-This downloads and initializes the app submodule at the exact pinned commit.
+> **Already cloned without submodules?** If the `app-under-test` folder is empty or missing files, run `git submodule update --init --recursive` from the QA repo root to fetch the app at its pinned commit.
 
 ### 3) Verify the Pinned App Version
-Run the following commands inside `app-under-test`:
-
 ```bash
 cd app-under-test
 ```
@@ -63,11 +53,8 @@ Expected output:
 ```
 
 ### 4) Run the App Under Test
-From the QA repo root:
+Stay in `app-under-test` and install dependencies:
 
-```bash
-cd app-under-test
-```
 ```bash
 npm install
 ```
@@ -93,5 +80,33 @@ Open the app in your browser at:
 http://localhost:3000
 ```
 
-## Notes
+## Newman API Smoke
+
+With the app under test running, open a new terminal for the following steps.
+
+From the QA repo root:
+
+```bash
+cd api-tests
+```
+```bash
+npm install
+```
+```bash
+npm run smoke
+```
+
+A passing run should end with a Newman table like this:
+
+|  | Executed | Failed |
+|---|---:|---:|
+| Iterations | 1 | 0 |
+| Requests | 9 | 0 |
+| Test scripts | 9 | 0 |
+| Prerequest scripts | 5 | 0 |
+| Assertions | 23 | 0 |
+
+**See [api-tests/README.md](api-tests/README.md) for details on the API smoke and Postman UI workflow.**
+
+## Setup Note
 To avoid duplicate setup steps, use this README as the primary setup guide. Refer to setup instructions in app-under-test's README only for additional setup information if needed.
