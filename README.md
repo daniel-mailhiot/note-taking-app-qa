@@ -4,15 +4,19 @@ This repository is the QA workspace for the `note-taking-app` project. It is cur
 
 The purpose of this project is to build familiarity with common QA tools and documentation practices, while strengthening my problem-solving and investigative skills in identifying issues, narrowing them down to likely causes, and documenting the results.
 
-## Planned Tools
-The planned toolset for this QA project includes Postman and Newman for API testing, Playwright for end-to-end UI smoke testing, and GitHub Actions for running smoke checks automatically in CI.
+## Tools
+The toolset for this QA project includes Postman and Newman for API testing, Playwright for end-to-end UI smoke testing, and GitHub Actions for running smoke checks automatically in CI.
 
-## Planned QA Work
-- Manual test case design and execution
-- Clear and reproducible defect reporting
-- API smoke testing with Postman and Newman
-- Lightweight UI smoke testing with Playwright
-- A GitHub Actions smoke workflow
+## Completed
+- QA strategy document
+- Manual test cases with a recorded execution run and evidence
+- Defect reports with reproduction steps and linked evidence
+- Postman API smoke collection
+- Newman command line runner for the API smoke
+- Playwright UI smoke suite
+
+## Remaining
+- GitHub Actions workflow that runs the Newman smoke first, then the Playwright smoke
 
 ## App Under Test
 - Repository: https://github.com/daniel-mailhiot/note-taking-app
@@ -107,6 +111,38 @@ A passing run should end with a Newman table like this:
 | Assertions | 23 | 0 |
 
 **See [api-tests/README.md](api-tests/README.md) for details on the API smoke and Postman UI workflow.**
+
+## Playwright UI Smoke
+
+With the app under test running, open a new terminal for the following steps.
+
+From the QA repo root:
+
+```bash
+cd e2e-tests
+```
+```bash
+npm install
+```
+```bash
+npx playwright install chromium
+```
+```bash
+npm run smoke
+```
+
+A passing run prints a list reporter summary like:
+
+```text
+Running 3 tests using 3 workers
+  ✓  1 [chromium] › smoke.spec.ts:9:7 › @smoke › TC-004 login reaches notes page
+  ✓  2 [chromium] › smoke.spec.ts:25:7 › @smoke › TC-008 create note appears in list
+  ✓  3 [chromium] › smoke.spec.ts:49:7 › @smoke › TC-006 + TC-007 logout invalidates session
+
+  3 passed (Xs)
+```
+
+**See [e2e-tests/README.md](e2e-tests/README.md) for more details on the Playwright UI smoke.**
 
 ## Setup Note
 To avoid duplicate setup steps, use this README as the primary setup guide. Refer to setup instructions in app-under-test's README only for additional setup information if needed.
