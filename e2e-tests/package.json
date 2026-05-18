@@ -1,13 +1,11 @@
 {
-  "name": "e2e-tests",
+  "name": "notes-app-e2e-tests",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {},
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "description": "Playwright runner for the Notes App UI smoke suite.",
+  "private": true,
+  "scripts": {
+    "smoke": "playwright test --grep @smoke"
+  },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.8.0"
